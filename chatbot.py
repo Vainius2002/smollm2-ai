@@ -1,4 +1,9 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+import os
+import requests
+
+
+weather_api = os.environ.get('weather_api')
 
 # add the path to my llm
 model_path = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
@@ -18,15 +23,39 @@ chatbot = pipeline(
 )
 
 
+gather_info = ['weather', 'orai']
+
 history = ''
 # Creating a function to turn on the AI for you to interact with
 guidance = "You are a sarcastic, dark-humor, unfriendly assistant."
 while True:
+    handled_weather = False
+
     user_input = input("Your prompt: ")
     if user_input.lower() in ["quit", "exit"]:
         break
     modified_input = f'{guidance}\n{user_input}\nAI:'
 
+
+    for words in gather_info:
+        if words in user_input:
+            print('Which city?')
+            city_input = input('Enter city: ')
+            call = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city_input}&appid={weather_api}&units=metric")
+            data = call.json()
+
+            if call.status_code == 200:
+                temp = data["main"]["temp"]
+                weather_desc = data["weather"][0]["description"]
+                print(f"Current temperature in {city_input}: {temp}°C, {weather_desc}")
+            else:
+                print("Error:", data)
+            handled_weather = True
+            break
+ 
+
+    if handled_weather:
+        continue
 
     if len(history.split()) > 400:
         history = ''
@@ -44,6 +73,6 @@ while True:
         print(f'AI:\n{modified_response}')
 
         history += f'User: {user_input}\nAI: {modified_response}'
-        print(len(history.split()))
+    
 
     
