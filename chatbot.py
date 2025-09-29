@@ -1,6 +1,9 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import os
 import requests
+import pyttsx3
+
+engine = pyttsx3.init()  # initialize the TTS engine
 
 
 weather_api = os.environ.get('weather_api')
@@ -40,6 +43,9 @@ while True:
     for words in gather_info:
         if words in user_input:
             print('Which city?')
+            engine.say('which city?')
+            engine.runAndWait()
+
             city_input = input('Enter city: ')
             call = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city_input}&appid={weather_api}&units=metric")
             data = call.json()
@@ -48,6 +54,8 @@ while True:
                 temp = data["main"]["temp"]
                 weather_desc = data["weather"][0]["description"]
                 print(f"Current temperature in {city_input}: {temp}°C, {weather_desc}")
+                engine.say(f"Current temperature in {city_input}: {temp}°C, {weather_desc}")
+                engine.runAndWait()
             else:
                 print("Error:", data)
             handled_weather = True
@@ -63,6 +71,8 @@ while True:
         response = chatbot(modified_input)[0]["generated_text"]
         modified_response = response.split('AI:')[-1]
         print(f'AI:\n{modified_response}')
+        engine.say(modified_response)
+        engine.runAndWait()
 
         history += f'User: {user_input}\nAI:{modified_response}'
         print(len(history.split()))
@@ -71,6 +81,8 @@ while True:
         response = chatbot(history_and_input)[0]["generated_text"]
         modified_response = response.split('AI:')[-1]
         print(f'AI:\n{modified_response}')
+        engine.say(modified_response)
+        engine.runAndWait()
 
         history += f'User: {user_input}\nAI: {modified_response}'
     
